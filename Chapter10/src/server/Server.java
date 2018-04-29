@@ -18,24 +18,24 @@ import javax.swing.*;
  * @author Hobbitus Ryzen
  */
 public class Server extends JFrame {
-
+    
     private JTextField userText;
     private JTextArea chatWindow;
     private ObjectOutputStream output;
     private ObjectInputStream input;
     private ServerSocket server;
     private Socket connection;
-
+    
     public Server() {
         super("SERVER");
 //        ******* Setting the chat history area ******
         userText = new JTextField();
         userText.setEditable(false);
-
+        
         userText.addActionListener(
                 new ActionListener() {
             public void actionPerformed(ActionEvent event) {
-                        sendMessage(event.getActionCommand());
+                sendMessage(event.getActionCommand());
                 userText.setText("");
             }
         });
@@ -48,19 +48,17 @@ public class Server extends JFrame {
         setSize(1280, 720);
         setVisible(true);
     }
-
+    
     public void startRunning() {
         try {
             server = new ServerSocket(3000, 20);
-
+            
             while (true) {
-                try 
-                {
+                try {
                     Connection();
                     Setup();
-                Chatting();
-                } catch (EOFException e) 
-                {
+                    Chatting();
+                } catch (EOFException e) {
                     showMessage("\n Server ended the connection! ");
                 } finally {
                     closeAll();
@@ -69,16 +67,16 @@ public class Server extends JFrame {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        
     }
-
+    
     private void Connection() throws IOException {
         showMessage("Waiting for a connection ...\n");
         connection = server.accept();
-        showMessage(connection.getInetAddress().getHostName() +  " connected.\n");
-
+        showMessage(connection.getInetAddress().getHostName() + " connected.\n");
+        
     }
-
+    
     private void Setup() throws IOException {
 //       ********** Initialization of OUTPUT stream with reference to our connected client.************
         output = new ObjectOutputStream(connection.getOutputStream());
@@ -89,44 +87,65 @@ public class Server extends JFrame {
         showMessage("Everything is setup!\n");
     }
     
-    private void Chatting() throws IOException
-    {
+    private void Chatting() throws IOException {
         String message = "Connected!";
         sendMessage(message);
 //      ************  Locking the client-server channel so clients can communicate with server only 1 at a time. ************
         canType(true);
-        do
-        {
+        do {
 //       ************ If user sends something that is not a String ************
-            try
-            {
+            try {
                 message = (String) input.readObject();
                 showMessage(message + "\n");
-            }
-            catch (ClassNotFoundException e)
-            {
+            } catch (ClassNotFoundException e) {
                 showMessage("Command not recognized.\n");
             }
-        }
-//      ************  Chat works until the user types "CLIENT - END". ************
-        while(!message.equals("CLIENT - END"));
+        } //      ************  Chat works until the user types "CLIENT - END". ************
+        while (!message.equals("CLIENT - END"));
     }
     
-    private void closeAll()
-    {
+    private void closeAll() {
         showMessage("Closing connection...\n");
         canType(false);
 //        ************ Closing INPUT and OUTPUT streams and socket CONNECTION. ************
-        try
-        {
+        try {
             output.close();
             input.close();
             connection.close();
-        }
-        catch(IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
+    
+    private void sendMessage(String message) {
+        try {
+            output.writeObject("SERVER - " + message);
+            output.flush();
+//          ************  Showing the message in our chat window. ************
+            showMessage("SERVER - " + message + "\n");
+        } catch (IOException e) {
+            chatWindow.append("Error - Message cannot be sent.");
+        }
+    }
+    
+    private void showMessage(final String text) {
+        SwingUtilities.invokeLater(
+                new Runnable() {
+            public void run() {
+                chatWindow.append(text);
+            }
+        }
+        );
+    }
+    
+    private void canType(final boolean tof)
+    {
+        SwingUtilities.invokeLater(
+                new Runnable() {
+            public void run() {
+                userText.setEditable(tof);
+            }
+        }
+        );
+    }
 }
