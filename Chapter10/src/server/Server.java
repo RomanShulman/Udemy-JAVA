@@ -9,6 +9,8 @@ import java.io.*;
 import java.net.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.*;
 /**
  *
@@ -46,6 +48,36 @@ public class Server extends JFrame
         /******* Setting the ability to scroll to chat window ******/
         add(new JScrollPane(chatWindow));
         setSize(1280, 720);
+        setVisible(true);
+    }
+    
+    public void startRunning()
+    {
+        try {
+            server = new ServerSocket(3000, 20);
+            
+            while (true)
+            {
+                try
+                {  
+//                Connection();
+//                Setup();
+//                Chatting();
+                }
+                catch (EOFException e)
+                {
+//                    showMessage("\n Server ended the connection! ");
+                }
+                finally
+                {
+//                    closeAll();
+                }
+            }
+        } 
+        catch (IOException e) 
+        {
+            e.printStackTrace();
+        }
 
     }
     
