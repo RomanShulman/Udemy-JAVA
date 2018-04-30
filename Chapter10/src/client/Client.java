@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package server;
+package client;
 
 import java.io.*;
 import java.net.*;
@@ -15,17 +15,18 @@ import javax.swing.*;
  *
  * @author Hobbitus Ryzen
  */
-public class Server extends JFrame {
+public class Client extends JFrame {
 
     private JTextField userText;
     private JTextArea chatWindow;
     private ObjectOutputStream output;
     private ObjectInputStream input;
-    private ServerSocket server;
     private Socket connection;
+    private String serverIP;
 
-    public Server() {
-        super("SERVER");
+    public Client(String host) {
+        super("CLIENT");
+        serverIP = host;
 //        ******* Setting the chat history area ******
         userText = new JTextField();
         userText.setEditable(false);
@@ -42,36 +43,30 @@ public class Server extends JFrame {
         chatWindow = new JTextArea();
         chatWindow.setEditable(false);
 //        ******* Setting the ability to scroll to chat window *****
-        add(new JScrollPane(chatWindow));
+        add(new JScrollPane(chatWindow), BorderLayout.CENTER);
         setSize(1280, 720);
         setVisible(true);
+
     }
 
-    public void startRunning() {
+    public void startRunning2() {
         try {
-            server = new ServerSocket(3000, 20);
-
-            while (true) {
-                try {
-                    Connection();
-                    Setup();
-                    Chatting();
-                } catch (EOFException e) {
-                    showMessage("\n Server ended the connection! ");
-                } finally {
-                    closeAll();
-                }
-            }
+            Connection();
+            Setup();
+            Chatting();
+        } catch (EOFException e) {
+            showMessage("\n Client ended the connection! ");
         } catch (IOException e) {
-            showMessage(e.toString());
+            e.printStackTrace();
+        } finally {
+            closeAll();
         }
-
     }
 
     private void Connection() throws IOException {
-        showMessage("Waiting for a connection ...\n");
-        connection = server.accept();
-        showMessage(connection.getInetAddress().getHostName() + " connected.\n");
+        showMessage("Connecting ...\n");
+        connection = new Socket(InetAddress.getByName(serverIP), 3000);
+        showMessage("Connected to " + connection.getInetAddress().getHostName() + "\n");
 
     }
 
@@ -98,8 +93,8 @@ public class Server extends JFrame {
             } catch (ClassNotFoundException e) {
                 showMessage("Command not recognized.\n");
             }
-        } //      ************  Chat works until the user types "CLIENT - END". ************
-        while (!message.equals("CLIENT - END"));
+        } //      ************  Chat works until the server types "SERVER - END". ************
+        while (!message.equals("SERVER - END"));
     }
 
     private void closeAll() {
@@ -117,10 +112,10 @@ public class Server extends JFrame {
 
     private void sendMessage(String message) {
         try {
-            output.writeObject("SERVER - " + message);
+            output.writeObject("CLIENT - " + message);
             output.flush();
 //          ************  Showing the message in our chat window. ************
-            showMessage("SERVER - " + message + "\n");
+            showMessage("CLIENT - " + message + "\n");
         } catch (IOException e) {
             chatWindow.append("Error - Message cannot be sent.");
         }
@@ -145,4 +140,5 @@ public class Server extends JFrame {
         }
         );
     }
+
 }
